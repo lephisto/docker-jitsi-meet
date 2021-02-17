@@ -1,3 +1,7 @@
+# Modified to support mod_turncredential out of the box
+
+Build your own images with `docker-compose build` upfront.
+
 # Jitsi Meet on Docker
 
 ![](resources/jitsi-docker.png)

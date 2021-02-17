@@ -14,6 +14,7 @@ http_default_host = "{{ .Env.XMPP_DOMAIN }}"
 {{ $JWT_AUTH_TYPE := .Env.JWT_AUTH_TYPE | default "token" }}
 {{ $JWT_TOKEN_AUTH_MODULE := .Env.JWT_TOKEN_AUTH_MODULE | default "token_verification" }}
 {{ $ENABLE_LOBBY := .Env.ENABLE_LOBBY | default "0" | toBool }}
+{{ $ENABLE_TURN := .Env.ENABLE_TURN | default "0" | toBool }}
 
 {{ $ENABLE_XMPP_WEBSOCKET := .Env.ENABLE_XMPP_WEBSOCKET | default "1" | toBool }}
 {{ $PUBLIC_URL := .Env.PUBLIC_URL | default "https://localhost:8443" -}}
@@ -25,6 +26,21 @@ asap_accepted_issuers = { "{{ join "\",\"" (splitList "," .Env.JWT_ACCEPTED_ISSU
 {{ if and $ENABLE_AUTH (eq $AUTH_TYPE "jwt") .Env.JWT_ACCEPTED_AUDIENCES }}
 asap_accepted_audiences = { "{{ join "\",\"" (splitList "," .Env.JWT_ACCEPTED_AUDIENCES) }}" }
 {{ end }}
+
+-- Turn Config
+
+{{ if $ENABLE_TURN }}
+turncredentials_secret = "{{ .Env.TURN_SECRET }}";
+turncredentials_port = {{ .Env.TURN_PORT }};
+turncredentials_ttl = 86400;
+turncredentials = {
+    { type = "stun", host = "{{ .Env.TURN_HOST }}" },
+    { type = "turn", host = "{{ .Env.TURN_HOST }}", port = {{ .Env.TURN_PORT }}},
+    { type = "turns", host = "{{ .Env.TURN_HOST }}", port = {{ .Env.TURN_PORT }} , transport = "tcp" }
+}
+{{ end }}
+
+-- End Turn Config
 
 consider_bosh_secure = true;
 
@@ -95,6 +111,9 @@ VirtualHost "{{ .Env.XMPP_DOMAIN }}"
         {{ if and $ENABLE_AUTH (eq $AUTH_TYPE "ldap") }}
         "auth_cyrus";
         {{end}}
+        {{ if $ENABLE_TURN }}
+        "turncredentials";
+	{{ end }}
     }
 
     {{ if $ENABLE_LOBBY }}
